@@ -1,0 +1,12 @@
+.venv/
+venv/
+
+__pycache__/
+
+build/
+dist/
+.DS_Store
+test.py
+ft_otp.key
+key.hex
+key.txt
