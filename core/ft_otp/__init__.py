@@ -4,6 +4,7 @@ import hmac
 import hashlib
 import time
 from math import floor
+import qrcode
 
 
 def dynamic_truncate(hmac_digest: bytes) -> int:
@@ -46,3 +47,14 @@ def totp():
     code_int = dynamic_truncate(hmac_digest)
     otp = code_int % (10**OUTPUT_DIGITS)
     return str(otp).zfill(OUTPUT_DIGITS)
+
+def generate_qr_code(key, user_label):
+    """
+    Generate qr code containing the key, the user can just scan it with Google Authenticator, and it will automatically configure their app with  TOTP seed.
+    Return: Image png or qr code
+    """
+
+    uri = f"otpauth://hotp/ft_otp:{user_label}?secret={key}&issuer=ft_otp&counter=0"
+
+    img = qrcode.make(uri)
+    img.save("ft_otp_qr.png")
