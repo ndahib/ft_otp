@@ -13,7 +13,7 @@ class Management:
 
     def _shared_key(self, key):
         if os.path.isfile(key):
-            with open(key, "r", encoding="utf-16") as f:
+            with open(key, "r") as f:
                 key = f.read().strip()
         try:
             bytes.fromhex(key)

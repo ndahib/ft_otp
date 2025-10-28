@@ -7,6 +7,6 @@ build/
 dist/
 .DS_Store
 test.py
-ft_otp.key
-key.hex
-key.txt
+key*
+*key
+
