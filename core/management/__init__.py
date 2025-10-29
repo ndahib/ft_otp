@@ -1,37 +1,33 @@
+# **************************************************************************** #
+#                                                                              #
+#                                                         :::      ::::::::    #
+#    __init__.py                                        :+:      :+:    :+:    #
+#                                                     +:+ +:+         +:+      #
+#    By: ndahib <ndahib@student.1337.ma>            +#+  +:+       +#+         #
+#                                                 +#+#+#+#+#+   +#+            #
+#    Created: 2025/10/29 14:10:53 by ndahib            #+#    #+#              #
+#    Updated: 2025/10/29 14:10:53 by ndahib           ###   ########.fr        #
+#                                                                              #
+# **************************************************************************** #
+
 import sys
 from argparse import ArgumentParser
-from ..constants import color
-import os
-import tkinter as tk
-from tkinter import messagebox
-from ..ft_otp import totp, generate_qr_code
+from ..constants import color, OPTIONS, HEADER
+from ..ft_otp import FtOtpGraphicalInterface, FtOtp
+import shlex
 
 
 class Management:
     def __init__(self, argv=None):
         self.argv = argv or sys.argv[:]
         self.program_name = self.argv[0]
-
-    def _shared_key(self, key):
-        if os.path.isfile(key):
-            with open(key, "r") as f:
-                key = f.read().strip()
-        try:
-            bytes.fromhex(key)
-            with open("ft_otp.key", "w", encoding="utf-16") as f:
-                f.write(key)
-            print(f"{color.OKGREEN}Key was successfully saved in ft_otp.key. {color.ENDC}")
-        except ValueError:
-            print(f"{color.FAIL}{sys.argv[0]}: error: key must be 64 hexadecimal characters..{color.ENDC}")
+        self.ft_otp = FtOtp()
 
     def _parse_commande_line(self):
-        try:
-            subcommand = self.argv[1]
-        except IndexError:
-            subcommand = "help"
         parser = ArgumentParser(
             usage="Usage: %s command [options]" % self.program_name, prog=self.program_name, description="A simple TOTP generator."
         )
+        sub_parser = parser.add_subparsers(dest="qr")
         parser.add_argument(
             "-g",
             "--generate",
@@ -44,78 +40,94 @@ class Management:
             help="generate a new temporary password based on the key given as argument and prints it on the standard output.",
             type=str,
         )
-        
-        pqr = parser.add_parser("provision", help="print otpauth URI and optionally a QR")
-        pqr.add_argument("key", help="hexadecimal key ")
+
+        pqr = sub_parser.add_parser("qr", help="generate a QR code using the given key")
+        pqr.add_argument("key", help="hexadecimal key")
         pqr.add_argument("account", help="account name (e.g., alice@example.com)")
-        pqr.add_argument("--issuer", help="Issuer (service name)")
-        pqr.add_argument("--digits", type=int, default=6)
-        pqr.add_argument("--algo", choices=["SHA1", "SHA256", "SHA512"], default="SHA1")
-        pqr.add_argument("--period", type=int, default=30)
-        pqr.add_argument("--qr-file", help="filename to write QR PNG (requires 'qrcode' package)")
+        pqr.add_argument("--issuer", help="Issuer (service name)", nargs="?", default="ft_otp")
+        pqr.add_argument("--qr-file", help="filename to write QR PNG (requires 'qrcode' package)", nargs="?", default="ft_otp_qr.png")
+
         args = parser.parse_args()
-        if subcommand == "help":
+        if len(sys.argv) == 1 or sys.argv[1] in ("-h", "--help", "help"):
             parser.print_help()
             sys.exit(0)
         return args
 
+    def main_menu(self):
+        if sys.argv.__len__() != 2:
+            print(f"{color.FAIL}Invalid number of arguments. Type '{OPTIONS.HELP}' for help.{color.ENDC}")
+        print(f"{color.HEADER}{HEADER}{color.ENDC}")
+        print(f"{color.OKCYAN}Choose an option:{color.ENDC}\n" f"  {OPTIONS.CLI}\n" f"  {OPTIONS.GUI}\n" f"  {OPTIONS.EXIT}\n" f"  {OPTIONS.HELP}\n")
+
+        while True:
+            user_choice = input(f"{color.OKCYAN}>> {color.ENDC}").strip().lower()
+
+            if user_choice == OPTIONS.CLI:
+                self.run_cli_mode()
+
+            elif user_choice == OPTIONS.GUI:
+                try:
+                    ft_otp_app = FtOtpGraphicalInterface(self.ft_otp)
+                    ft_otp_app.root.mainloop()
+                except KeyboardInterrupt:
+                    print(f"{color.WARNING}Exiting...{color.ENDC}")
+                    sys.exit(0)
+                except Exception as e:
+                    print(f"{color.FAIL}Error: {e}{color.ENDC}")
+
+            elif user_choice == OPTIONS.EXIT:
+                print(f"{color.WARNING}Exiting...{color.ENDC}")
+                sys.exit(0)
+
+            elif user_choice == OPTIONS.HELP:
+                print(
+                    f"{color.OKCYAN}Available options:{color.ENDC}\n"
+                    f"  {OPTIONS.CLI}  - Run in command-line mode\n"
+                    f"  {OPTIONS.GUI}  - Launch the graphical interface\n"
+                    f"  {OPTIONS.EXIT} - Exit the program\n"
+                    f"  {OPTIONS.HELP} - Show this help message\n"
+                )
+
+            else:
+                print(f"{color.FAIL}Invalid option. Type '{OPTIONS.HELP}' for help.{color.ENDC}")
+
+    def run_cli_mode(self):
+        """Interactive CLI mode that reuses _parse_commande_line()."""
+
+        print(f"{color.OKGREEN}Entering CLI mode... (type 'back' to return to menu){color.ENDC}\n")
+
+        while True:
+            cmd = input(f"{color.OKBLUE}ft_otp> {color.ENDC}").strip()
+
+            if cmd.lower() in ("exit", "back", "quit"):
+                print(f"{color.WARNING}Returning to main menu...{color.ENDC}\n")
+                break
+
+            if not cmd:
+                continue
+
+            try:
+                args_list = shlex.split(cmd)
+                sys.argv = [self.program_name] + args_list
+
+                print(sys.argv)
+                args = self._parse_commande_line()
+
+                if args.generate:
+                    self.ft_otp.encrypte_save_key(args.generate)
+                elif hasattr(args, "qr") and hasattr(args, "key") and hasattr(args, "account"):
+                    print(f"{color.OKCYAN}Generating QR code...{color.ENDC}")
+                    self.ft_otp.generate_qr_code(args.key, args.account, args.issuer, args.qr_file)
+                    print(f"{color.OKCYAN}QR code saved as {args.qr_file}{color.ENDC}")
+                elif args.key:
+                    print(f"{color.OKCYAN}Generating OTP for key...{color.ENDC}")
+
+                    print(self.ft_otp.totp())
+
+            except SystemExit:
+                pass
+            except Exception as e:
+                print(f"{color.FAIL}Error: {e}{color.ENDC}")
+
     def execute(self):
-        args = self._parse_commande_line()
-
-        if args.generate:
-            self._shared_key(args.generate)
-        elif args.key:
-            print(totp())
-        elif args.generate_qr:
-            generate_qr_code()
-
-
-
-
-# class FtOtpApp:
-#     def __init__(self, root):
-#         self.root = root
-#         self.root.title("ft_otp — HOTP Generator")
-#         self.root.geometry("500x550")
-#         self.root.resizable(False, False)
-
-#         tk.Label(root, text="ft_otp HOTP Generator", font=("Arial", 16, "bold")).pack(pady=10)
-
-#         # Buttons
-#         tk.Button(root, text="Generate New Key", command=self.generate_key, bg="#2e86de", fg="white", width=20).pack(pady=10)
-#         tk.Button(root, text="Generate OTP", command=self.generate_otp, bg="#27ae60", fg="white", width=20).pack(pady=10)
-
-#         # OTP display
-#         self.otp_label = tk.Label(root, text="Your OTP will appear here", font=("Courier", 18))
-#         self.otp_label.pack(pady=20)
-
-#         # QR code display
-#         self.qr_label = tk.Label(root)
-#         self.qr_label.pack(pady=10)
-
-#     def generate_key(self):
-#         key = genereate_hex
-#         messagebox.showinfo("Success", "Key successfully generated and saved as ft_otp.key")
-
-#         # Generate QR code
-#         qr_path = generate_qr_code(key_hex)
-#         img = Image.open(qr_path).resize((200, 200))
-#         img_tk = ImageTk.PhotoImage(img)
-#         self.qr_label.configure(image=img_tk)
-#         self.qr_label.image = img_tk
-
-#     def generate_otp(self):
-#         if not os.path.exists("ft_otp.key"):
-#             messagebox.showerror("Error", "No key file found. Generate a key first.")
-#             return
-
-#         try:
-#             key_hex = decrypt_key()
-#         except Exception as e:
-#             messagebox.showerror("Error", f"Failed to read key: {e}")
-#             return
-
-#         # Use a simple counter (could be time-based or stored persistently)
-#         counter = int.from_bytes(os.urandom(4), 'big') % 100000
-#         otp = hotp(key_hex, counter)
-#         self.otp_label.config(text=otp, fg="black", font=("Courier", 26, "bold"))
+        self.main_menu()
