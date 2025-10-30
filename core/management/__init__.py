@@ -22,6 +22,7 @@ class Management:
         self.argv = argv or sys.argv[:]
         self.program_name = self.argv[0]
         self.ft_otp = FtOtp()
+        print("-------===>>", self.ft_otp.key)
 
     def _parse_commande_line(self):
         parser = ArgumentParser(
@@ -110,7 +111,6 @@ class Management:
                 args_list = shlex.split(cmd)
                 sys.argv = [self.program_name] + args_list
 
-                print(sys.argv)
                 args = self._parse_commande_line()
 
                 if args.generate:
@@ -121,7 +121,6 @@ class Management:
                     print(f"{color.OKCYAN}QR code saved as {args.qr_file}{color.ENDC}")
                 elif args.key:
                     print(f"{color.OKCYAN}Generating OTP for key...{color.ENDC}")
-
                     print(self.ft_otp.totp())
 
             except SystemExit:
