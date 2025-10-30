@@ -1,6 +1,5 @@
 # ft_otp
 
-[![Build Status](https://github.com/ndahib/ft_otp/actions/workflows/ci.yml/badge.svg)](https://github.com/ndahib/ft_otp/actions)
 [![License](https://img.shields.io/badge/license-None-lightgrey.svg)](https://github.com/ndahib/ft_otp)
 [![Language](https://img.shields.io/badge/language-Python-blue.svg)](https://github.com/ndahib/ft_otp)
 
