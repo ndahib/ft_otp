@@ -17,7 +17,6 @@
 - [Project Structure](#project-structure)
 - [Testing](#testing)
 - [Contributing](#contributing)
-- [License](#license)
 - [Credits](#credits)
 
 ---
