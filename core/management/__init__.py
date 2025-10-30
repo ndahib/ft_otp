@@ -22,7 +22,6 @@ class Management:
         self.argv = argv or sys.argv[:]
         self.program_name = self.argv[0]
         self.ft_otp = FtOtp()
-        print("-------===>>", self.ft_otp.key)
 
     def _parse_commande_line(self):
         parser = ArgumentParser(
