@@ -85,35 +85,38 @@ You can use ft_otp in two modes: CLI or GUI.
 ### Graphical Interface (GUI)
 
 ```bash
-python ft_otp.py --gui
+python ft_otp.py
+gui
 ```
 
-This launches a small graphical interface showing the current 6-digit TOTP, refreshing automatically every 30 seconds.
+
+This launches a small graphical interface showing with 2 buttons one for generating key and other for generating totp.
 
 ### Command-Line Interface (CLI)
 
 **Example 1** — Generate a TOTP from a stored key:
 
 ```bash
-python ft_otp.py -k ft_otp.key
+python ft_otp.py
+cli
 ```
 
-**Example 2** — Generate a new random key and save it:
+**Example 2** — save and encrypt a new random key and save it:
 
 ```bash
-python ft_otp.py -g key.hex
+ -g key.hex
 ```
 
-**Example 3** — Interactive mode (update every N seconds):
+**Example 3** — generate totp code with 6 digit :
 
 ```bash
-python ft_otp.py -k ft_otp.key -i 30
+-k ft_otp.key
 ```
 
-**Example 4** — Encrypt or re-encrypt a key file:
+**Example 4** — generate qr code and save it in image:
 
 ```bash
-python ft_otp.py -p <Base64Password>
+qr --key=ft_otp.key --account="alice@gmail.com" --issuer"ft_otp_user"
 ```
 
 ---
@@ -169,8 +172,8 @@ ft_otp/
 └── README.md
 ```
 
-- **ft_otp.py** — implements CLI and orchestrates TOTP generation
-- **core/** — includes functions for hashing, key management, and encryption
+- **core/management/** — parse command line and orchestrate cli, gui choices
+- **core/management/** —  includes functions for totp generation, qr image generation, key management, and encryption
 - **requirements.txt** — optional dependencies for GUI and encryption
 
 ---
@@ -180,7 +183,7 @@ ft_otp/
 To verify your implementation:
 
 ```bash
-python ft_otp.py -k ft_otp.key
+-k ft_otp.key
 ```
 
 Then compare the generated code with one from a trusted app (Google Authenticator, Authy, etc.) using the same shared secret.
@@ -230,17 +233,6 @@ Contributions are welcome!
 - Write clear commit messages
 
 ---
-
-## License
-
-⚠️ No license currently specified.
-
-To make this project open source, add a LICENSE file (for example, MIT or Apache 2.0).
-
-Until then, please do not redistribute without permission.
-
----
-
 ## Credits
 
 - **Author:** ndahib
@@ -249,13 +241,5 @@ Until then, please do not redistribute without permission.
 - **Core Libraries Used:** `hmac`, `hashlib`, `time`, `struct`, `base64`
 
 ---
-
-## Suggested Improvements
-
-- Add unit tests using RFC 6238 test vectors
-- Include QR generation for Authenticator apps
-- Add a LICENSE file
-- Integrate GitHub Actions CI for tests
-- Optionally release as a small pip package (`ft_otp`)
 
 💡 *"Security through understanding — ft_otp shows how TOTP truly works."*
